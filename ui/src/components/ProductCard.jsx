@@ -24,8 +24,9 @@ export default function ProductCard({
     priceChange = -14.2 // negative means drop
   } = product || {};
 
-  const isDrop = priceChange < 0;
-  const isGain = priceChange > 0;
+  // Treat prices lower than original price (negative priceChange) as positive/good (drops)
+  const isSavings = priceChange < 0;
+  const isIncrease = priceChange > 0;
   
   const handleDeleteClick = () => {
     setIsDeleting(true);
@@ -117,17 +118,17 @@ export default function ProductCard({
           </div>
         </div>
 
-        {/* Trend Indicator Pill */}
+        {/* Trend Indicator Pill - Emerald (Green) for savings/drops, Red for price increases */}
         <div className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border font-bold text-xs shadow-inner ${
-          isDrop 
+          isSavings 
             ? 'bg-emerald-950/80 border-emerald-700/80 text-emerald-400' 
-            : isGain 
+            : isIncrease 
             ? 'bg-red-950/80 border-red-700/80 text-red-400' 
             : 'bg-zinc-800 border-zinc-700 text-zinc-400'
         }`}>
-          {isDrop ? (
+          {isSavings ? (
             <TrendingDown className="w-3.5 h-3.5 stroke-[2.5]" />
-          ) : isGain ? (
+          ) : isIncrease ? (
             <TrendingUp className="w-3.5 h-3.5 stroke-[2.5]" />
           ) : (
             <Minus className="w-3.5 h-3.5 stroke-[2.5]" />
