@@ -16,7 +16,7 @@ export default function App() {
   useEffect(() => {
     const fetchTracked = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/tracked');
+        const res = await fetch('/api/tracked');
         const data = await res.json();
         if (data.success) {
           setProducts(data.products);
@@ -39,7 +39,7 @@ export default function App() {
 
   const handleAddProduct = async (productId) => {
     try {
-      const response = await fetch('http://localhost:5000/api/tracked', {
+      const response = await fetch('/api/tracked', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ productId })
@@ -55,7 +55,7 @@ export default function App() {
 
   const handleDeleteProduct = async (id) => {
     try {
-      const response = await fetch(`http://localhost:5000/api/tracked/${id}`, {
+      const response = await fetch(`/api/tracked/${id}`, {
         method: 'DELETE'
       });
       const data = await response.json();
@@ -78,7 +78,7 @@ export default function App() {
   };
 
   const handleExportCsv = () => {
-    window.location.href = 'http://localhost:5000/api/export-csv';
+    window.location.href = '/api/export-csv';
   };
 
   return (
