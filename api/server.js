@@ -12,7 +12,7 @@ let trackedProducts = [];
 let totalChecks = 0;
 let totalDrops = 0;
 
-// Helper: Fetch catalogs from external public endpoints
+// Helper: Fetch catalogs from external public endpoints with structured properties
 async function fetchCatalog() {
   try {
     const [dummyRes, fakeRes] = await Promise.all([
@@ -23,27 +23,40 @@ async function fetchCatalog() {
     const dummyData = await dummyRes.json();
     const fakeData = await fakeRes.json();
 
-    const dummyProducts = (dummyData.products || []).map(p => ({
-      id: `dummy-${p.id}`,
-      title: p.title,
-      price: p.price,
-      origPrice: p.price,
-      source: 'dummyjson',
-      image: p.thumbnail,
-      history: [p.price],
-      lastChecked: new Date().toLocaleTimeString()
-    }));
+    const dummyProducts = (dummyData.products || []).map(p => {
+      // Establish a realistic initial original price (slightly higher than base price)
+      const originalPrice = Number((p.price * 1.25).toFixed(2));
+      return {
+        id: `dummy-${p.id}`,
+        title: p.title,
+        store: 'DummyJSON',
+        price: p.price,
+        originalPrice: originalPrice,
+        currencySymbol: '$',
+        category: p.category || 'Electronics',
+        image: p.thumbnail,
+        priceChange: Number((((originalPrice - p.price) / originalPrice) * 100).toFixed(1)),
+        history: [p.price],
+        lastChecked: new Date().toLocaleTimeString()
+      };
+    });
 
-    const fakeProducts = (fakeData || []).map(p => ({
-      id: `fake-${p.id}`,
-      title: p.title,
-      price: p.price,
-      origPrice: p.price,
-      source: 'fakestore',
-      image: p.image,
-      history: [p.price],
-      lastChecked: new Date().toLocaleTimeString()
-    }));
+    const fakeProducts = (fakeData || []).map(p => {
+      const originalPrice = Number((p.price * 1.25).toFixed(2));
+      return {
+        id: `fake-${p.id}`,
+        title: p.title,
+        store: 'FakeStoreAPI',
+        price: p.price,
+        originalPrice: originalPrice,
+        currencySymbol: '$',
+        category: 'Electronics',
+        image: p.image,
+        priceChange: Number((((originalPrice - p.price) / originalPrice) * 100).toFixed(1)),
+        history: [p.price],
+        lastChecked: new Date().toLocaleTimeString()
+      };
+    });
 
     return [...dummyProducts, ...fakeProducts];
   } catch (error) {
@@ -97,9 +110,9 @@ app.delete('/api/tracked/:id', (req, res) => {
 
 // 5. GET Export CSV Log
 app.get('/api/export-csv', (req, res) => {
-  let csv = 'ID,Title,Source,Original Price,Current Price,Last Checked\n';
+  let csv = 'ID,Title,Store,Original Price,Current Price,Price Drop %,Last Checked\n';
   trackedProducts.forEach(p => {
-    csv += `"${p.id}","${p.title}","${p.source}",${p.origPrice},${p.price},"${p.lastChecked}"\n`;
+    csv += `"${p.id}","${p.title}","${p.store}",${p.originalPrice},${p.price},${p.priceChange}%,"${p.lastChecked}"\n`;
   });
   res.header('Content-Type', 'text/csv');
   res.attachment('watchlist-export.csv');
@@ -120,11 +133,14 @@ setInterval(() => {
       totalDrops++;
     }
 
+    // Recalculate unique percentage drop relative to its original starting price
+    const priceChange = Number((((product.originalPrice - newPrice) / product.originalPrice) * 100).toFixed(1));
     const updatedHistory = [...product.history, newPrice].slice(-10); // Keep last 10 points
 
     return {
       ...product,
       price: newPrice,
+      priceChange: priceChange,
       history: updatedHistory,
       lastChecked: new Date().toLocaleTimeString()
     };
