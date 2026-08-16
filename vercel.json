@@ -7,7 +7,7 @@
     },
     {
       "source": "/(.*)",
-      "destination": "/ui/$1"
+      "destination": "/ui/dist/$1"
     }
   ]
 }
